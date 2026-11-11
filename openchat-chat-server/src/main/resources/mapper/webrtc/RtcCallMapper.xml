@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.openchat.webrtc.mapper.RtcCallMapper">
+
+    <!-- 给发送端到期请求保留五秒窗口，扫描仅兜底，不延长接听截止时间。 -->
+    <select id="findDueInvitations" resultType="java.lang.String">
+        SELECT call_id FROM rtc_call
+        WHERE state IN ('RINGING', 'ACCEPTED', 'CONNECTED')
+          AND expires_at &lt;= DATE_SUB(CURRENT_TIMESTAMP(3), INTERVAL 5 SECOND)
+          AND (state = 'RINGING'
+               OR JSON_SEARCH(COALESCE(participant_states, '{}'), 'one', 'INVITED') IS NOT NULL)
+        ORDER BY expires_at, call_id
+        LIMIT #{limit}
+    </select>
+
+</mapper>

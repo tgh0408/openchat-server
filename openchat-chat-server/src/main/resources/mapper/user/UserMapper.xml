@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.openchat.user.mapper.UserMapper">
+    <!-- 统一使用数据库时钟和北京时间，不受应用节点或连接会话时区影响。 -->
+    <sql id="loginIpDay">
+        DATE_FORMAT(DATE_ADD(UTC_TIMESTAMP(), INTERVAL 8 HOUR), '%Y-%m-%d')
+    </sql>
+    <update id="updateConnectionIp">
+        UPDATE `user`
+        SET ip_info = JSON_SET(
+            CASE WHEN JSON_TYPE(ip_info) = 'OBJECT' THEN ip_info ELSE JSON_OBJECT() END,
+            '$.createIp', COALESCE(
+                NULLIF(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(ip_info, '$.createIp')), 'null'), ''),
+                #{ip}),
+            '$.updateIp', #{ip},
+            '$.updateIpDetail',
+            CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(ip_info, '$.updateIpDetail.ip')) = #{ip}
+                THEN JSON_EXTRACT(ip_info, '$.updateIpDetail')
+                ELSE CAST('null' AS JSON)
+            END,
+            '$.lastLoginIpDate', <include refid="loginIpDay"/>)
+        WHERE id = #{uid}
+          AND COALESCE(
+              NULLIF(JSON_UNQUOTE(JSON_EXTRACT(ip_info, '$.lastLoginIpDate')), 'null'),
+              '') &lt; <include refid="loginIpDay"/>
+    </update>
+
+    <update id="fillCreateIpDetail">
+        UPDATE `user`
+        SET ip_info = JSON_SET(ip_info, '$.createIpDetail', CAST(#{detail} AS JSON))
+        WHERE id = #{uid}
+          AND JSON_UNQUOTE(JSON_EXTRACT(ip_info, '$.createIp')) = #{ip}
+          AND NOT (JSON_UNQUOTE(JSON_EXTRACT(ip_info, '$.createIpDetail.ip')) &lt;=> #{ip})
+    </update>
+    <update id="fillUpdateIpDetail">
+        UPDATE `user`
+        SET ip_info = JSON_SET(ip_info, '$.updateIpDetail', CAST(#{detail} AS JSON))
+        WHERE id = #{uid}
+          AND JSON_UNQUOTE(JSON_EXTRACT(ip_info, '$.updateIp')) = #{ip}
+          AND NOT (JSON_UNQUOTE(JSON_EXTRACT(ip_info, '$.updateIpDetail.ip')) &lt;=> #{ip})
+    </update>
+</mapper>

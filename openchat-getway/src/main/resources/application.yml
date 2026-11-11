@@ -1,0 +1,46 @@
+#server:
+#  port: 99
+#  ssl:
+#    enabled: false
+#    certificate: ${TLS_CERTIFICATE_PATH} # TLS 证书路径
+#    certificate-private-key: ${TLS_PRIVATE_KEY_PATH} # TLS 私钥路径，不提交私钥
+#spring:
+#  application:
+#    name: openchat-gateway
+#
+#  cloud:
+#    nacos:
+#      discovery:
+#        graceful-shutdown-wait-time: 1000
+#        namespace: ${NACOS_NAMESPACE} # 服务发现的命名空间 ID
+#    gateway:
+#      server:
+#        webflux:
+#          routes:
+#            - id: openchat-server
+#              uri: lb://openchat-server
+#              predicates:
+#                - Path=/capi/**
+#
+#            - id: wechat-callback
+#              uri: lb://openchat-server
+#              predicates:
+#                - Path=/wx/**
+#
+#            - id: minio
+#              uri: http://127.0.0.1:9000
+#              predicates:
+#                - Path=/openchat/**
+#              filters:
+#                - PreserveHostHeader
+#
+#            - id: test-baidu
+#              uri: https://www.baidu.com
+#              predicates:
+#                - Path=/**
+#                - Query=url,baidu
+#
+#logging:
+#  level:
+#    org.springframework.web.servlet.DispatcherServlet: INFO
+#    org.springframework.cloud.gateway: INFO

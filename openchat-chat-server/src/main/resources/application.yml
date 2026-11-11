@@ -1,0 +1,185 @@
+openchat:
+  # 控制面板账号密码：通过环境变量填写，不在仓库保存真实凭据。
+  dashboard:
+    enable: true
+    token-ttl-seconds: 36000
+    username: ${DASHBOARD_USERNAME}
+    password: ${DASHBOARD_PASSWORD}
+  #统计接口耗时,线上关闭，消耗性能
+  plus-web-invoke-time-interceptor:
+    # 是否启用耗时拦截器和响应捕获过滤器
+    enable: false
+    # 输出日志过滤的字段
+    #是否输出请求头(未脱敏,生产环境请勿使用)
+    print-header: true
+    exclude-properties:
+      - clientid
+      - password
+      - oldPassword
+      - newPassword
+      - confirmPassword
+    # 为空时不限制接口；非空时只输出匹配接口的日志，支持 *、** 和 {变量名}
+    # 例如：["/capi/chat/contact/info/{roomId}", "/capi/chat/msg/**"]
+    allowed-path: []
+  auth:
+    # 客户端固定 ID：填写各平台约定值，需与客户端保持一致。
+    client-id:
+      PC: ${PC_CLIENT_ID}
+      PHONE: ${PHONE_CLIENT_ID}
+      WEB : ${WEB_CLIENT_ID}
+    # JWT 签名密钥：填写独立生成的高强度随机密钥。
+    secret: ${CHAT_JWT_SECRET}
+    #请求路径的白名单 比如 livekit 的webhook回调 不走过滤器
+    white-path: ["/capi/livekit/callback"]
+  rtc:
+    p2p:
+      enabled: ${rtc.livekit.turns.enable}
+      # 逗号分隔的可信 STUN 地址；空配置只尝试可直接到达的候选，失败仍走 LiveKit。
+      stun-urls: ${rtc.livekit.stun-urls}
+    livekit:
+      server-url: ${rtc.livekit.url}
+      api-key: ${rtc.livekit.api-key}
+      api-secret: ${rtc.livekit.api-secret}
+      token-ttl-seconds: ${rtc.livekit.token-ttl-seconds}
+      enabled: true
+  chat:
+    #rocketmq liteTopic
+    push:
+      #超过指定人数判断为大群，不可回退
+      large-group-member-threshold: 200
+      lite:
+        enabled: ${rocketmq.lite.enabled:false}
+        endpoints: ${rocketmq.lite.endpoints:}
+        parent-topic: sse_push_lite
+        consumer-group: sse_push_lite
+        node-id: ${rocketmq.lite.chatnode:chat-node-1}
+        access-key: ${rocketmq.access-key:}
+        secret-key: ${rocketmq.secret-key:}
+        ssl: ${rocketmq.lite.ssl:false}
+
+spring:
+  profiles:
+    #运行的环境
+    active: test
+  application:
+    name: openchat-server
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${nacos.discovery.server-addr}
+        username: ${nacos.discovery.username}
+        password: ${nacos.discovery.password}
+        graceful-shutdown-wait-time: 1000
+        namespace: ${nacos.discovery.namespace}
+  datasource:
+    dynamic:
+      primary: service
+      datasource:
+#        localhost:
+#          url: jdbc:mysql://127.0.0.1:3306/openchat?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=%2B08:00&forceConnectionTimeZoneToSession=true
+#          username: ${DB_USER}
+#          password: ${DB_PASSWORD}
+#          driver-class-name: com.mysql.cj.jdbc.Driver
+        service:
+          url: jdbc:mysql://${openchat.mysql.ip}:${openchat.mysql.port}/${openchat.mysql.db}?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=%2B08:00&forceConnectionTimeZoneToSession=true
+          username: ${openchat.mysql.username}
+          password: ${openchat.mysql.password}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  web:
+    resources:
+      add-mappings: false
+  data:
+    redis:
+      # Redis服务器地址
+      host: ${openchat.redis.host}
+      # Redis服务器端口号
+      port: ${openchat.redis.port}
+      # 使用的数据库索引，默认是0
+      database: 0
+      # 连接超时时间
+      timeout: 1800000
+      # 设置密码
+      password: ${openchat.redis.password}
+  servlet:
+    multipart:
+      max-file-size: 2GB
+      max-request-size: 2GB
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss.SSS
+    time-zone: Asia/Shanghai
+
+server:
+  tomcat:
+    threads:
+      max: 500
+  port: 10086
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+    map-underscore-to-camel-case: true
+  type-handlers-package: com.openchat.user.domain.enums,com.openchat.chat.domain.enums,com.openchat.common.domain.enums
+
+logging:
+  level:
+#    org.apache.ibatis: ERROR
+    com.openchat: DEBUG
+    com.openchat.chat.consumer.LiteTopicPush: DEBUG
+
+mail:
+  host: ${openchat.mail.host}
+  protocol: ${openchat.mail.protocol}
+  auth: ${openchat.mail.auth}
+  user: ${openchat.mail.user}
+  password: ${openchat.mail.password}
+
+rocketmq:
+  # V5 连接 Proxy gRPC 入口，复用现有 profile 的 Spring 属性。
+  # chat_send_msg、sse_push、rtc_sse_push 使用 TRANSACTION；Lite 父 Topic 保持原类型。
+  producer:
+    endpoints: ${rocketmq.lite.endpoints}
+    access-key: ${rocketmq.access-key}
+    secret-key: ${rocketmq.secret-key}
+    ssl-enabled: ${rocketmq.lite.ssl:false}
+    request-timeout: 3 # 秒
+    max-attempts: 3 # 包含首次发送
+  # 消费订阅在各消费者的 @RocketMQMessageListener 声明，连接参数复用 producer。
+  # SSE/RTC 每节点独立消费组，rocketmq.lite.chatnode 必须稳定且唯一。
+
+oss:
+  enabled: ${oss.enabled}
+  type: ${oss.type}
+  endpoint: ${oss.endpoint}
+  access-key: ${oss.access-key}
+  secret-key: ${oss.secret-key}
+  bucket-name: ${oss.bucketName}
+  public-endpoint: ${oss.public-endpoint}
+  upload-endpoint: ${oss.public-endpoint}
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    csrf:
+      enabled: true
+  show-login-endpoint: true
+  login-endpoint:
+    username-example: example-user
+    password-example: example-password
+
+sse:
+  enabled: true
+  path: /resource/sse
+  push-core-threads: 4
+  push-max-threads: 16
+  push-queue-capacity: 1000
+  heartbeat-interval-seconds: 15
+
+#是否启用敏感词过滤
+sensitive-word:
+  enabled: false
+  filter: AC

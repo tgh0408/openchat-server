@@ -1,0 +1,75 @@
+/lib/
+
+# IDE metadata
+.idea/
+*.iml
+.vscode/
+
+# Local credentials and deployment overrides
+.env
+.env.*
+!.env.example
+!.env.sample
+application-local*.properties
+application-local*.yml
+application-local*.yaml
+application-secrets*.properties
+application-secrets*.yml
+application-secrets*.yaml
+secrets/
+*.log
+
+# Build outputs for all modules
+target/
+out/
+*.class
+*.jar
+*.jar.original
+*.war
+*.war.original
+*.ear
+resource/
+
+/openchat-chat-server/target
+/openchat-chat-server/src/test
+
+# 按功能显式纳入回归和部署说明，其他本地测试及资源仍保持忽略。
+!/openchat-chat-server/src/test/
+/openchat-chat-server/src/test/**
+!/openchat-chat-server/src/test/**/
+!/openchat-chat-server/src/test/java/com/openchat/chat/consumer/LiteTopicPushTest.java
+!/openchat-chat-server/src/test/java/com/openchat/chat/service/abstracts/TemporaryMessageTypeTest.java
+!/openchat-chat-server/src/test/java/com/openchat/chat/service/CreateGroupTest.java
+!/openchat-chat-server/src/test/java/com/openchat/chat/service/RoomAccessGroupInvitationTest.java
+!/openchat-chat-server/src/test/java/com/openchat/common/event/listener/GroupInvitationListenerTest.java
+!/openchat-chat-server/src/test/java/com/openchat/common/filter/RequestContextFilterRegistrationTest.java
+!/openchat-chat-server/src/test/java/com/openchat/common/filter/WebInvokeTimeDispatchTest.java
+!/openchat-chat-server/src/test/java/com/openchat/system/dao/ClientReleaseDaoTest.java
+!/openchat-chat-server/src/test/java/com/openchat/system/controller/AdminWebMvcTest.java
+!/openchat-chat-server/src/test/java/com/openchat/system/service/ClientReleaseServiceTest.java
+!/openchat-chat-server/src/test/java/com/openchat/system/service/AdminAuthServiceTest.java
+!/openchat-chat-server/src/test/java/com/openchat/user/service/FriendApplicationReplyTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/dao/RtcCallDepartureDaoTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/dao/RtcGroupCallDaoTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/dao/RtcCallSummaryDaoTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/dao/RtcWebhookEventDaoTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/dao/RtcCallWebhookDaoTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/dao/RtcGroupCallMappingTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/service/GroupCallRepositoryFixture.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/service/RtcGroupDepartureTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/service/RtcGroupDiscoveryTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/service/RtcGroupJoinTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/controller/LiveKitWebhookControllerTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/service/RtcWebhookServiceTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/service/RtcWebhookCallServiceTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/service/RtcWebhookTransactionTest.java
+!/openchat-chat-server/src/test/java/com/openchat/webrtc/service/RtcWebhookRoomQueryTest.java
+# 项目文档与 SQL 参考统一维护在 doc/；resource/ 仅保留被忽略的本地资料。
+
+# 证书私钥与密钥库，不入库
+*.key
+*.p12
+*.jks
+*.pfx
+*.pem
+*.keystore

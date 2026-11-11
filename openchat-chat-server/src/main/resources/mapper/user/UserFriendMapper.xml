@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.openchat.user.mapper.UserFriendMapper">
+    <resultMap id="friendDetailRow" type="com.openchat.user.domain.dto.FriendDetailRow">
+        <id column="uid" property="uid"/>
+        <result column="name" property="name"/>
+        <result column="remark" property="remark"/>
+        <result column="avatar" property="avatar"/>
+        <result column="sex" property="sex"/>
+        <result column="personality_signature" property="personalitySignature"/>
+        <result column="added_at" property="addedAt"/>
+    </resultMap>
+    <select id="getFriendDetail" resultMap="friendDetailRow">
+        SELECT u.id AS uid, u.name, f.nickname AS remark, u.avatar, u.sex,
+               u.personality_signature, f.create_time AS added_at
+        FROM user_friend f
+        INNER JOIN `user` u ON u.id = f.friend_uid
+        WHERE f.uid = #{uid} AND f.friend_uid = #{targetUid}
+          AND f.delete_status = 0 AND f.black_status = 0
+        LIMIT 1
+    </select>
+    <resultMap id="friendPageRow" type="com.openchat.user.domain.dto.FriendPageRow">
+        <id column="id" property="id"/>
+        <result column="uid" property="uid"/>
+        <result column="friend_uid" property="friendUid"/>
+        <result column="nickname" property="nickname"/>
+        <result column="profile_uid" property="profileUid"/>
+        <result column="name" property="name"/>
+        <result column="sort_key" property="sortKey"/>
+    </resultMap>
+    <select id="getFriendPage" resultMap="friendPageRow">
+        SELECT page.*
+        FROM (
+            SELECT f.id, f.uid, f.friend_uid, f.nickname,
+                   u.id AS profile_uid, u.name,
+                   COALESCE(f.nickname_sort_key, u.name_sort_key, _utf8mb4'1:')
+                       COLLATE utf8mb4_bin AS sort_key
+            FROM user_friend f
+            LEFT JOIN `user` u ON u.id = f.friend_uid
+            WHERE f.uid = #{uid} AND f.delete_status = 0 AND f.black_status = 0
+        ) page
+        <if test="sortKey != null">
+            WHERE page.sort_key &gt; CONVERT(#{sortKey} USING utf8mb4) COLLATE utf8mb4_bin
+               OR (page.sort_key = CONVERT(#{sortKey} USING utf8mb4) COLLATE utf8mb4_bin
+                   AND page.id &gt; #{relationId})
+        </if>
+        ORDER BY page.sort_key COLLATE utf8mb4_bin , page.id
+        LIMIT #{limit}
+    </select>
+</mapper>

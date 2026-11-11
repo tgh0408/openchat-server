@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.openchat.user.mapper.UserEmojiMapper">
+    <select id="listByUid" resultType="com.openchat.user.domain.dto.EmojiInfoDTO">
+        SELECT e.id AS imgId, e.url, e.sha_256 AS sha256, ue.sort
+        FROM user_emoji ue
+        INNER JOIN emoji e ON ue.emoji_id = e.id
+        WHERE ue.uid = #{uid} AND ue.delete_status = 0
+        ORDER BY ue.sort ASC, ue.emoji_id ASC
+    </select>
+
+    <select id="selectFirstCollection" resultType="com.openchat.user.domain.entity.UserEmoji">
+        SELECT ue.id, ue.uid, ue.emoji_id, ue.sort, ue.delete_status
+        FROM user_emoji ue INNER JOIN emoji e ON ue.emoji_id = e.id
+        WHERE ue.uid = #{uid} AND ue.delete_status = 0
+        ORDER BY ue.sort ASC, ue.emoji_id ASC LIMIT 1
+    </select>
+</mapper>

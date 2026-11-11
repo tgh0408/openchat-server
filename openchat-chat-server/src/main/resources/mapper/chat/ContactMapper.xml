@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.openchat.chat.mapper.ContactMapper">
+
+    <insert id="saveOrRestore">
+        INSERT INTO openchat.contact (uid, room_id) VALUE (#{uid}, #{roomId})
+        ON DUPLICATE KEY UPDATE id = id
+    </insert>
+
+    <select id="hasMessageAfter" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM
+            <choose>
+                <when test="group">message</when>
+                <otherwise>message_user</otherwise>
+            </choose>
+            WHERE room_id = #{roomId}
+              <if test="!group">AND uid = #{uid}</if>
+              AND id &gt; #{lastDeleteId}
+        )
+    </select>
+
+    <insert id="createMissingContacts">
+        insert into contact(`room_id`, `uid`, `last_read_msg_id`)
+        values
+        <foreach collection="uids" item="uid" separator=",">
+            (#{roomId}, #{uid}, 0)
+        </foreach>
+        on DUPLICATE KEY UPDATE `id` = `id`
+    </insert>
+
+    <select id="getContactList" resultType="com.openchat.chat.domain.entity.Contact">
+        SELECT c.id, c.uid, c.room_id, c.read_time, r.active_time,
+               COALESCE(c.is_top, 0) AS is_top,
+               c.last_delete_id, c.last_read_msg_id, c.last_hidden_msg_id,
+               c.contact_state, c.create_time, c.update_time, c.version
+        FROM contact c
+        JOIN room r ON r.id = c.room_id
+        WHERE c.uid = #{uid} AND c.contact_state = 0
+        <!-- 关系失效不移除本人会话；详情、历史和发送由各自入口校验当前权限。 -->
+        ORDER BY COALESCE(c.is_top, 0) DESC, r.active_time DESC, r.id DESC
+    </select>
+</mapper>
