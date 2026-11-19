@@ -21,6 +21,7 @@ import com.openchat.chat.domain.entity.Room;
 import com.openchat.chat.domain.entity.RoomGroup;
 import com.openchat.chat.domain.entity.RoomGroupExtra;
 import com.openchat.chat.domain.enums.GroupRoleEnum;
+import com.openchat.chat.domain.enums.HotFlagEnum;
 import com.openchat.chat.domain.enums.RoomTypeEnum;
 import com.openchat.chat.domain.vo.req.AddGroupMembersReq;
 import com.openchat.chat.domain.vo.req.RemoveGroupMembersReq;
@@ -41,6 +42,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,14 +70,37 @@ public class RoomGroupService {
         if (uid == null || uid <= 0) {
             throw new BusinessException("全员群成员 ID 无效");
         }
-        Room room = roomDao.get(ALL_USER_ROOM_ID, "全员群不存在");
-        AssertUtil.isTrue(room.getType() == RoomTypeEnum.GROUP, "全员群房间类型不匹配");
-        roomGroupDao.get(ALL_USER_ROOM_ID, "全员群不存在或已解散");
+        Room room = roomDao.get(ALL_USER_ROOM_ID);
+        GroupRoleEnum role = GroupRoleEnum.NORMAL;
+        if (room == null) {
+            room = ChatAdapter.buildRoom(RoomTypeEnum.GROUP);
+            room.setId(ALL_USER_ROOM_ID);
+            room.setHotFlag(HotFlagEnum.YES);
+            try {
+                // 固定房间主键决定跨节点唯一创建者；冲突回滚注册，不回查或抢占群主。
+                if (!roomDao.save(room)) {
+                    throw new BusinessException("创建用户冲突,请重试注册");
+                }
+            } catch (DuplicateKeyException exception) {
+                throw new BusinessException("全员群正在初始化，请重试注册");
+            }
+            RoomGroup group = ChatAdapter.buildGroupRoom(ALL_USER_ROOM_ID);
+            group.setName("全员群");
+            group.setUid(uid);
+            group.setExtJson(new RoomGroupExtra());
+            if (!roomGroupDao.save(group)) {
+                throw new BusinessException("创建全员群资料失败");
+            }
+            role = GroupRoleEnum.SUPER_ADMIN;
+        } else {
+            AssertUtil.isTrue(room.getType() == RoomTypeEnum.GROUP, "全员群房间类型不匹配");
+            roomGroupDao.get(ALL_USER_ROOM_ID, "全员群不存在或已解散");
+        }
 
         GroupMember member = new GroupMember();
         member.setRoomId(ALL_USER_ROOM_ID);
         member.setUid(uid);
-        member.setRole(GroupRoleEnum.NORMAL);
+        member.setRole(role);
         if (!groupMemberDao.save(member)) {
             throw new BusinessException("加入全员群失败");
         }
@@ -372,7 +397,7 @@ public class RoomGroupService {
 
     /** 拒绝者不加入成员或会话；提示只经现有系统消息链路向实际群成员投递。 */
     private void publishInvitationRefusals(Long uid, Long roomId, List<Long> rejected,
-                                          Map<Long, User> profiles) {
+                                           Map<Long, User> profiles) {
         for (Long target : rejected) {
             String content = invitationName(target, profiles) + " 拒绝加入群聊";
             Message message = saveSystemMessage(uid, roomId, systemMessageSummary(content),

@@ -129,9 +129,10 @@ public class UserService {
             // 唯一索引是集群并发下的最终约束，不能只依赖上面的预检查。
             throw new BusinessException("账号或用户名已存在");
         }
+        // 先初始化固定编号的全员群，避免空库中的文件助手占用房间 1。
+        roomGroupService.joinAllUserGroup(user.getId());
         // 注册成功返回前已具有真实房间号，客户端从会话列表直接打开文件助手。
         fileAssistantService.getOrCreate(user.getId());
-        roomGroupService.joinAllUserGroup(user.getId());
         Long uid = user.getId();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
