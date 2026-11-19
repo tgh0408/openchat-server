@@ -1,10 +1,4 @@
 openchat:
-  # 控制面板账号密码：通过环境变量填写，不在仓库保存真实凭据。
-  dashboard:
-    enable: true
-    token-ttl-seconds: 36000
-    username: ${DASHBOARD_USERNAME}
-    password: ${DASHBOARD_PASSWORD}
   #统计接口耗时,线上关闭，消耗性能
   plus-web-invoke-time-interceptor:
     # 是否启用耗时拦截器和响应捕获过滤器
@@ -20,28 +14,47 @@ openchat:
       - confirmPassword
     # 为空时不限制接口；非空时只输出匹配接口的日志，支持 *、** 和 {变量名}
     # 例如：["/capi/chat/contact/info/{roomId}", "/capi/chat/msg/**"]
-    allowed-path: []
+    allowed-path: [ ]
   auth:
-    # 客户端固定 ID：填写各平台约定值，需与客户端保持一致。
+    #客户端固定id，用于区分不同设备下的单点登录
     client-id:
-      PC: ${PC_CLIENT_ID}
-      PHONE: ${PHONE_CLIENT_ID}
-      WEB : ${WEB_CLIENT_ID}
-    # JWT 签名密钥：填写独立生成的高强度随机密钥。
-    secret: ${CHAT_JWT_SECRET}
-    #请求路径的白名单 比如 livekit 的webhook回调 不走过滤器
-    white-path: ["/capi/livekit/callback"]
+      PC: 7f3a9c2e5b8d4f1a6e0c3b7d9a2f5e84
+      PHONE: e4d3c2b1a09f8e7d6c5b4a39281706f5
+      WEB: 8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f
+    #密码 盐
+    password-key: 685wf62c0b1d4f6a0c5e9d2b7a4f8c31
+    # JWT Key
+    secret: TGH666
+    # 免 JWT 校验；登录、注册、验证码仍需校验 clientId 和 X-Device-Id
+    white-path: [
+      "/capi/livekit/callback",
+      "/capi/user/public/login",
+      "/capi/user/public/getCaptcha",
+      "/capi/user/public/register",
+      "/capi/update/public/latest/client",
+      "/capi/update/public/latest/android",
+      "/capi/update/public/releases/client/{releaseId}",
+      "/capi/update/public/releases/android/{releaseId}"
+    ]
+    # 免平台及设备标识校验；与 JWT 白名单分别配置，不加入登录、注册、验证码
+    device-white-path: [
+      "/capi/livekit/callback",
+      "/capi/update/public/latest/client",
+      "/capi/update/public/latest/android",
+      "/capi/update/public/releases/client/{releaseId}",
+      "/capi/update/public/releases/android/{releaseId}"
+    ]
   rtc:
     p2p:
-      enabled: ${rtc.livekit.turns.enable}
+      enabled: ${rtc.livekit.turns.enable:false}
       # 逗号分隔的可信 STUN 地址；空配置只尝试可直接到达的候选，失败仍走 LiveKit。
-      stun-urls: ${rtc.livekit.stun-urls}
+      stun-urls: ${rtc.livekit.stun-urls:}
     livekit:
-      server-url: ${rtc.livekit.url}
-      api-key: ${rtc.livekit.api-key}
-      api-secret: ${rtc.livekit.api-secret}
-      token-ttl-seconds: ${rtc.livekit.token-ttl-seconds}
-      enabled: true
+      server-url: ${rtc.livekit.url:}
+      api-key: ${rtc.livekit.api-key:}
+      api-secret: ${rtc.livekit.api-secret:}
+      token-ttl-seconds: ${rtc.livekit.token-ttl-seconds:300}
+      enabled: ${rtc.livekit.enabled:true}
   chat:
     #rocketmq liteTopic
     push:
@@ -75,13 +88,13 @@ spring:
     dynamic:
       primary: service
       datasource:
-#        localhost:
-#          url: jdbc:mysql://127.0.0.1:3306/openchat?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=%2B08:00&forceConnectionTimeZoneToSession=true
-#          username: ${DB_USER}
-#          password: ${DB_PASSWORD}
-#          driver-class-name: com.mysql.cj.jdbc.Driver
+        #        localhost:
+        #          url: jdbc:mysql://127.0.0.1:3306/openchat?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=%2B08:00&forceConnectionTimeZoneToSession=true
+        #          username: root
+        #          password: "010408"
+        #          driver-class-name: com.mysql.cj.jdbc.Driver
         service:
-          url: jdbc:mysql://${openchat.mysql.ip}:${openchat.mysql.port}/${openchat.mysql.db}?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=%2B08:00&forceConnectionTimeZoneToSession=true
+          url: jdbc:mysql://${openchat.mysql.ip}:${openchat.mysql.port}/${openchat.mysql.db}?useSSL=false&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=%2B08:00&forceConnectionTimeZoneToSession=true
           username: ${openchat.mysql.username}
           password: ${openchat.mysql.password}
           driver-class-name: com.mysql.cj.jdbc.Driver
@@ -120,14 +133,14 @@ server:
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
     map-underscore-to-camel-case: true
   type-handlers-package: com.openchat.user.domain.enums,com.openchat.chat.domain.enums,com.openchat.common.domain.enums
 
 logging:
   level:
-#    org.apache.ibatis: ERROR
+    #    org.apache.ibatis: ERROR
     com.openchat: DEBUG
     com.openchat.chat.consumer.LiteTopicPush: DEBUG
 
@@ -162,14 +175,14 @@ oss:
   upload-endpoint: ${oss.public-endpoint}
 springdoc:
   api-docs:
-    enabled: true
+    enabled: false
   swagger-ui:
     csrf:
       enabled: true
   show-login-endpoint: true
   login-endpoint:
-    username-example: example-user
-    password-example: example-password
+    username-example: admin
+    password-example: admin
 
 sse:
   enabled: true

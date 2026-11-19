@@ -15,5 +15,11 @@ public class LiveKitProperties {
     private String apiSecret = "";
     private long tokenTtlSeconds = 300;
 
-
+    /** 媒体服务为可选配置；缺少连接或签名配置时不影响普通聊天服务启动。 */
+    public boolean isConfigured() {
+        return enabled && serverUrl != null && !serverUrl.isBlank()
+                && apiKey != null && !apiKey.isBlank()
+                && apiSecret != null && !apiSecret.isBlank()
+                && tokenTtlSeconds > 0;
+    }
 }

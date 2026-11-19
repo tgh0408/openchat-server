@@ -6,7 +6,8 @@ import io.livekit.server.WebhookReceiver;
 import livekit.LivekitWebhook.WebhookEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Conditional;
+import com.openchat.rtc.autoconfigure.LiveKitConfiguredCondition;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -22,8 +23,7 @@ import java.nio.charset.StandardCharsets;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@ConditionalOnProperty(prefix = "openchat.rtc.livekit", name = "enabled",
-        havingValue = "true", matchIfMissing = true)
+@Conditional(LiveKitConfiguredCondition.class)
 public class LiveKitWebhookController {
     private final WebhookReceiver receiver;
     private final RtcWebhookService webhookService;

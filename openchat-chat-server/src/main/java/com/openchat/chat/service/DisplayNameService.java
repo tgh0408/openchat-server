@@ -39,9 +39,10 @@ public class DisplayNameService {
         Room accessibleRoom = access.requireCurrentMember(viewerUid, roomId);
         switch (accessibleRoom.getType()) {
             case GROUP -> {
-                if (members.getMember(roomId, targetUid) == null) {
-                    throw new BusinessException("目标用户不属于当前群聊");
-                }
+                // 历史消息发送者可能已退群或被移出，不要求目标仍是当前成员。
+//                if (members.getMember(roomId, targetUid) == null) {
+//                    throw new BusinessException("目标用户不属于当前群聊");
+//                }
             }
             case FRIEND -> {
                 if (!Objects.equals(access.requireFriendPeer(viewerUid, roomId), targetUid)) {

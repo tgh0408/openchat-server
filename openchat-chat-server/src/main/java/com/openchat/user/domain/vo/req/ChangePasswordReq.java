@@ -12,15 +12,18 @@ public class ChangePasswordReq {
 
     @Schema(description = "旧密码")
     @NotNull
+    @lombok.ToString.Exclude
     private String oldPassword;
 
     @Schema(description = "新密码")
     @NotNull
     @Length(min = 8, max = 16)
     @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+{}$$$$:;<>,.?~\\-=]).{6,18}$", message = "密码必须长度为6-18位并且包含大小写字母与特殊符号")
+    @lombok.ToString.Exclude
     private String newPassword;
 
     @Schema(description = "确认新密码")
     @NotNull
+    @lombok.ToString.Exclude
     private String confirmPassword;
 }

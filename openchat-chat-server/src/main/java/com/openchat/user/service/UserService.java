@@ -4,8 +4,11 @@ import cn.hutool.core.util.RandomUtil;
 import com.openchat.chat.service.FileAssistantService;
 import com.openchat.chat.service.DisplayNameService;
 import com.openchat.chat.service.RoomGroupService;
+import com.openchat.common.annotation.RedissonLock;
 import com.openchat.common.exception.BusinessException;
+import com.openchat.common.properties.AuthProperties;
 import com.openchat.common.utils.AssertUtil;
+import com.openchat.common.utils.PasswordUtils;
 import com.openchat.common.utils.RequestHolder;
 import com.openchat.user.dao.UserDao;
 import com.openchat.user.domain.entity.*;
@@ -39,12 +42,13 @@ import static com.openchat.user.domain.validate.PhoneOrEmailValidator.PHONE_REGE
 public class UserService {
     final LoginService loginService;
     final UserDao userDao;
-    private final FileAssistantService fileAssistantService;
-    private final RoomGroupService roomGroupService;
-    private final DisplayNameService displayNames;
-    private final RegistrationAvatarService registrationAvatars;
-    private final IpService ipService;
-    private final MinioBucketService minioBucketService;
+    final FileAssistantService fileAssistantService;
+    final RoomGroupService roomGroupService;
+    final DisplayNameService displayNames;
+    final RegistrationAvatarService registrationAvatars;
+    final IpService ipService;
+    final MinioBucketService minioBucketService;
+    final AuthProperties authProperties;
     private static final String baseChars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*";
 
     public UserInfoResp getUserInfo(Long uid) {
@@ -90,6 +94,7 @@ public class UserService {
         return userDao.getBatch(atUidList);
     }
 
+    @RedissonLock(prefixKey = "openchat:user:register", key = "#loginReq.userId.trim().toLowerCase(T(java.util.Locale).ROOT)")
     @Transactional(rollbackFor = Exception.class)
     public void createUser(RegisterReq loginReq) {
         String userId = loginReq.getUserId().trim();
@@ -105,7 +110,7 @@ public class UserService {
             }
             default -> throw new BusinessException("账号格式不正确");
         }
-        user.setPassword(loginReq.getPassword());
+        user.setPassword(PasswordUtils.encode(loginReq.getPassword(), authProperties.getPasswordKey()));
         user.setName(loginReq.getUsername());
         user.setNameSortKey(NameSortKey.build(user.getName()));
         // 先保存原始 IP，归属地在事务提交后异步补齐，不等待第三方网络。
@@ -143,9 +148,12 @@ public class UserService {
 
     public LoginResp login(LoginReq loginReq, String deviceId, TerminalEnum terminal) {
         TargetInfoReq targetInfoReq = check_req_type(TargetInfoReq.builder().searchText(loginReq.getUserId()).build());
-        User one = userDao.findByCredentials(
-                targetInfoReq.getCode(), loginReq.getUserId(), loginReq.getPassword());
-        if (one == null) {
+        if (targetInfoReq.getCode() == IdTypeEnum.UNKNOWN) {
+            throw new BusinessException("用户名或密码错误");
+        }
+        User one = userDao.get(targetInfoReq.getCode(), loginReq.getUserId());
+        if (one == null || !PasswordUtils.matches(
+                loginReq.getPassword(), one.getPassword(), authProperties.getPasswordKey())) {
             throw new BusinessException("用户名或密码错误");
         }
         // 只有凭据校验成功的显式登录才能替换会话，快捷进入和 SSE 重连只校验。
@@ -168,19 +176,21 @@ public class UserService {
         loginService.logout(uid, terminal, token);
     }
 
+    @RedissonLock(prefixKey = "openchat:user:password", key = "#uid")
     @Transactional(rollbackFor = Exception.class)
     public void changePassword(Long uid, @Valid ChangePasswordReq changePasswordReq) {
         User user = userDao.get(IdTypeEnum.ID, uid);
-        if (!user.getPassword().equals(changePasswordReq.getOldPassword())) {
+        if (user == null || !PasswordUtils.matches(
+                changePasswordReq.getOldPassword(), user.getPassword(), authProperties.getPasswordKey())) {
             throw new BusinessException("旧密码验证失败");
         }
         if (!changePasswordReq.getNewPassword().equals(changePasswordReq.getConfirmPassword())) {
             throw new BusinessException("两次输入的密码不一致");
         }
-        User update = new User();
-        update.setId(uid);
-        update.setPassword(changePasswordReq.getNewPassword());
-        userDao.updateById(update);
+        String encoded = PasswordUtils.encode(changePasswordReq.getNewPassword(), authProperties.getPasswordKey());
+        if (!userDao.changePassword(uid, user.getPassword(), encoded)) {
+            throw new BusinessException("密码已变化，请重新验证后重试");
+        }
     }
 
 }

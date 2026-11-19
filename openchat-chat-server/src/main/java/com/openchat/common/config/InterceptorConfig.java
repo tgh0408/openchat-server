@@ -25,15 +25,13 @@ public class InterceptorConfig implements WebMvcConfigurer {
         registry.addInterceptor(tokenInterceptor)
                 .addPathPatterns("/capi/**")
                 // 服务端回调仅由 LiveKit SDK 验签，不接受用户登录凭据代替签名。
-                .excludePathPatterns("/capi/*/public/**")
                 .excludePathPatterns(authProperties.getWhitePath());
         registry.addInterceptor(blackInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(authProperties.getWhitePath());
-        // 管理接口和 LiveKit 回调包含凭据，不能进入输出原始头及正文的调试日志。
+        // 管理接口已迁移；仍排除旧路径，避免切换期间误路由的凭据进入调试日志。
         plusWebInvokeTimeInterceptor.ifAvailable(interceptor ->
                         registry.addInterceptor(interceptor)
-                .excludePathPatterns("/system/admin", "/system/admin/**")
                 .excludePathPatterns(authProperties.getWhitePath())
         );
     }

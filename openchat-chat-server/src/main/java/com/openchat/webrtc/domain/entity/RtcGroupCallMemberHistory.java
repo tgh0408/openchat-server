@@ -1,5 +1,7 @@
 package com.openchat.webrtc.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.openchat.rtc.domain.RtcParticipantState;
@@ -10,6 +12,8 @@ import java.util.Date;
 @Data
 @TableName("rtc_group_call_member_history")
 public class RtcGroupCallMemberHistory {
+    @TableId(type = IdType.AUTO)
+    private Long id;
     private String callId;
     private Long uid;
     private Long roomId;

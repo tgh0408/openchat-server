@@ -19,6 +19,7 @@ public class RegisterReq {
     private String username; //用户名
     @NotBlank
     @Length(min = 6, max = 20,message = "密码长度必须在6到20之间")
+    @lombok.ToString.Exclude
     private String password;
     /** 仅随 multipart 注册表单上传，不接受客户端指定头像 URL。 */
     @JsonIgnore

@@ -1,6 +1,7 @@
 package com.openchat.chat.controller;
 
 
+import com.openchat.chat.domain.entity.Room;
 import com.openchat.chat.domain.vo.req.AddContactReq;
 import com.openchat.chat.domain.vo.req.DeleteContactReq;
 import com.openchat.chat.domain.vo.req.ContactReadReq;
@@ -9,7 +10,7 @@ import com.openchat.chat.domain.vo.req.HideContactReq;
 import com.openchat.chat.service.ContactReadService;
 import com.openchat.chat.domain.vo.resp.ChatRoomResp;
 import com.openchat.chat.service.ContactService;
-import com.openchat.chat.service.RoomAppService;
+import com.openchat.chat.service.FileAssistantService;
 import com.openchat.common.annotation.FrequencyControl;
 import com.openchat.common.domain.vo.resp.ApiResult;
 import com.openchat.common.utils.RequestHolder;
@@ -37,6 +38,14 @@ import java.util.List;
 public class ContactController {
     final ContactService contactService;
     final ContactReadService contactReadService;
+    final FileAssistantService fileAssistantService;
+
+    @GetMapping("/contact/fileAssistant")
+    @Operation(summary = "获取本人文件助手房间号，包含隐藏会话")
+    public ApiResult<Long> getFileAssistantRoomId() {
+        Room room = fileAssistantService.getOrCreate(RequestHolder.get().getUid());
+        return ApiResult.success(room.getId());
+    }
 
     @PostMapping("/contact/read")
     @Operation(summary = "确认实际已读位置")

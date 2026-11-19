@@ -36,7 +36,7 @@ public class RequestContextFilter extends OncePerRequestFilter {
         RequestHolder.remove();
         try {
             // 预检没有实际客户端标识值，仍交给原有 CORS 策略处理。
-            if (CorsUtils.isPreFlightRequest(request)) {
+            if (CorsUtils.isPreFlightRequest(request) || isDeviceExempt(request)) {
                 chain.doFilter(request, response);
                 return;
             }
@@ -84,9 +84,9 @@ public class RequestContextFilter extends OncePerRequestFilter {
         return request.getRemoteAddr();
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String[] whitePaths = authProperties.getWhitePath();
+    /** 只跳过设备校验，不跳过上下文清理，也不隐含免 JWT 校验。 */
+    private boolean isDeviceExempt(HttpServletRequest request) {
+        String[] whitePaths = authProperties.getDeviceWhitePath();
         if (whitePaths == null) return false;
         // 白名单是应用内路径，与 MVC 拦截器保持一致，不包含部署的 contextPath。
         String path = request.getRequestURI().substring(request.getContextPath().length());

@@ -27,7 +27,6 @@ public final class LiveKitTokenService {
         if (properties == null) {
             throw new IllegalArgumentException("LiveKit 配置不能为空");
         }
-        validateProperties(properties);
         this.properties = properties;
     }
 
@@ -36,6 +35,7 @@ public final class LiveKitTokenService {
             String identity,
             String displayName,
             boolean videoAllowed) {
+        validateProperties(properties);
         if (roomName == null || roomName.isBlank()
                 || identity == null || identity.isBlank()
                 || displayName == null || displayName.isBlank()) {
@@ -72,11 +72,8 @@ public final class LiveKitTokenService {
     }
 
     private void validateProperties(LiveKitProperties properties) {
-        if (properties.getApiKey() == null || properties.getApiKey().isBlank()
-                || properties.getApiSecret() == null || properties.getApiSecret().isBlank()
-                || properties.getServerUrl() == null || properties.getServerUrl().isBlank()
-                || properties.getTokenTtlSeconds() <= 0) {
-            throw new IllegalStateException("LiveKit 配置无效");
+        if (!properties.isConfigured()) {
+            throw new IllegalStateException("LiveKit 服务未配置，暂时无法使用中转通话");
         }
     }
 }

@@ -60,9 +60,10 @@ public class User implements Serializable {
     private Long phone;
 
     /**
-     * 密码
+     * 登录密码的随机盐与 SHA-256 摘要
      */
     @TableField("password")
+    @lombok.ToString.Exclude
     private String password;
 
     /**

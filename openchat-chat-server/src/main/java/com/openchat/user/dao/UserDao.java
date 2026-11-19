@@ -89,11 +89,15 @@ public class UserDao {
         return result;
     }
 
-    /** 登录凭据在同一条查询中匹配，不向业务层暴露 Wrapper。 */
-    public User findByCredentials(IdTypeEnum accountType, String account, String password) {
-        SFunction<User, ?> field = getField(accountType);
-        return userMapper.selectOne(new LambdaQueryWrapper<User>()
-                .eq(field, account).eq(User::getPassword, password));
+    /** 用户无版本字段；即使分布式锁失效，原摘要条件也阻止迟到改密覆盖新密码。 */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean changePassword(Long uid, String expectedPassword, String encodedPassword) {
+        int updated = userMapper.update(null, new LambdaUpdateWrapper<User>()
+                .eq(User::getId, uid)
+                .eq(User::getPassword, expectedPassword)
+                .set(User::getPassword, encodedPassword));
+        if (updated == 1) events.publishEvent(new UserChanged(uid));
+        return updated == 1;
     }
 
     private static @NonNull SFunction<User, ?> getField(IdTypeEnum accountType) {

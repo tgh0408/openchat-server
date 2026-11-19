@@ -15,6 +15,7 @@ public class LoginReq {
     private String userId; //用户名
     @NotBlank
     @Length(min = 6, max = 20,message = "密码长度必须在6到20之间")
+    @lombok.ToString.Exclude
     private String password;
 //    @NotBlank(message = "验证码ID不可为空")
     private String codeKey;
