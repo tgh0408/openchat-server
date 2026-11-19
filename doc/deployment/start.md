@@ -14,7 +14,7 @@
 | RocketMQ V5 Proxy | 应用通过 gRPC 入口连接，预先配置 Topic、消费组和权限 |
 | Nacos | 聊天服务注册发现；网关还使用配置中心 |
 | MinIO | 提前创建配置中的桶，准备对象读写、上传签名和客户端可达地址 |
-| LiveKit | 当前默认启用，配置服务端密钥、客户端媒体入口和 Webhook |
+| LiveKit | 配置服务端密钥、客户端媒体入口和 Webhook，详见 [LiveKit 部署](livekit.md) |
 | 邮件服务 | 填写应用要求的 `openchat.mail.*` 属性；邮件功能按实际业务使用 |
 
 ```shell

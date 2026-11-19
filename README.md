@@ -16,6 +16,20 @@ HTTP 接收业务请求，RocketMQ 协调消息处理与通知，SSE 向在线�
 
 核心技术：**JDK 25 · Spring Boot 4.0.8 · MyBatis-Plus · MySQL · Redis · RocketMQ V5 · MinIO · LiveKit · Nacos**。
 
+## 客户端预览
+
+### 登录
+
+![OpenChat 客户端登录界面](doc/img/login.png)
+
+### 会话列表
+
+![OpenChat 会话列表与文件传输助手](doc/img/contact.png)
+
+### 通讯录
+
+![OpenChat 通讯录，包含新的朋友、群聊和联系人](doc/img/userList.png)
+
 ## 项目结构
 
 ```text
@@ -42,6 +56,7 @@ openchat-server/
 - [环境配置](doc/deployment/configuration.md)
 - [API 与客户端契约](doc/api.md)
 - [RTC 架构、协议与功能说明](doc/rtc/README.md)
+- [LiveKit 部署与音视频接入](doc/deployment/livekit.md)
 - [数据库结构与初始化](doc/sql/README.md)
 - [管理 API 与客户端发布](doc/deployment/admin.md)
 - [开发与验证](doc/development.md)

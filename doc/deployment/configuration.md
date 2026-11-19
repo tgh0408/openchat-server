@@ -38,7 +38,7 @@
 | `rtc.livekit.stun-urls` | 单聊直连使用的 STUN 地址列表 |
 | `openchat.mail.host/protocol/auth/user/password` | 邮件属性 |
 
-`rtc.livekit.turns.enable` 在本项目中的作用是 P2P 开关，不能据其名称认定应用已经配置 TURN。媒体服务器的端口、证书、STUN/TURN 和外部可达性在 LiveKit 部署中另行设置。
+`rtc.livekit.turns.enable` 在本项目中的作用是 P2P 开关，不能据其名称认定应用已经配置 TURN。媒体服务器的端口、证书、STUN/TURN 和外部可达性见 [LiveKit 部署](livekit.md)。
 
 ## 外部配置示例
 

@@ -2,7 +2,7 @@
 
 OpenChat 管理呼叫权限、邀请、接听设备、通话状态与信令。媒体由客户端 WebRTC P2P 或 LiveKit SFU 传输，HTTP、MQ 和 SSE 不承载音视频数据。
 
-[文档首页](../README.md) · [鉴权与响应](../api.md) · [环境配置](../deployment/configuration.md)
+[文档首页](../README.md) · [鉴权与响应](../api.md) · [环境配置](../deployment/configuration.md) · [LiveKit 部署](../deployment/livekit.md)
 
 ## 模块与存储
 

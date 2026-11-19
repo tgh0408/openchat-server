@@ -14,6 +14,7 @@ OpenChat Server 目前处于首次发布准备阶段。本目录介绍当前源�
 | [会话与群聊](chat/README.md) | 会话同步、显式已读、隐藏、文件助手、群成员与权限 |
 | [消息与附件](messages/README.md) | 类型、发送、引用、分片占位、下载、撤回与表情 |
 | [音视频通话](rtc/README.md) | 呼叫状态、接口、设备归属、群通话、P2P、LiveKit 与回调 |
+| [LiveKit 部署](deployment/livekit.md) | 媒体服务部署、域名与端口、TURN、OpenChat 配置及 Webhook 验收 |
 | [MQ、可靠调用与推送](infrastructure/messaging.md) | 事务消息、失败重试、节点分发、LiteTopic 与停机 |
 | [缓存与运行机制](infrastructure/README.md) | 共享缓存、活跃合并写、线程池、OSS 与集群边界 |
 | [管理 API 与客户端发布](deployment/admin.md) | 管理员认证、安装包发布、版本查询与下载 |
