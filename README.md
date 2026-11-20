@@ -18,6 +18,9 @@ HTTP 接收业务请求，RocketMQ 协调消息处理与通知，SSE 向在线�
 
 ## 客户端预览
 
+- 桌面客户端：[openchat-client](https://github.com/tgh0408/openchat-client)
+- 安卓客户端：[openchat-android](https://github.com/tgh0408/openchat-android)
+
 ### 登录
 
 ![OpenChat 客户端登录界面](doc/img/login.png)
